@@ -22,9 +22,15 @@ app.use((req, res, next) => {
   next();
 });
 
+const normalizeOrigin = (origin) => {
+  if (!origin) return '';
+  const trimmed = origin.trim().replace(/\/$/, '');
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
 const configuredOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
-  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .map(normalizeOrigin)
   .filter(Boolean);
 
 const allowedOrigins = [
@@ -35,7 +41,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    const normalizedOrigin = origin?.replace(/\/$/, '');
+    const normalizedOrigin = normalizeOrigin(origin);
     if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
